@@ -1,0 +1,65 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {
+    "esbuild": "^0.12.14"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "esbuild-plugin-glob",
+  "author": "Wannes Salomé",
+  "module": "dist/esbuild-plugin-glob.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/esbuild-plugin-glob.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/esbuild-plugin-glob.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^5.0.1",
+    "@types/minimatch": "^3.0.4",
+    "esbuild": "^0.12.14",
+    "husky": "^6.0.0",
+    "size-limit": "^5.0.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.2",
+    "minimatch": "^3.0.4",
+    "tiny-glob": "^0.2.9",
+    "tiny-invariant": "^1.1.0"
+  }
+}
