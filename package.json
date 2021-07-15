@@ -28,10 +28,11 @@
     }
   },
   "prettier": {
-    "printWidth": 80,
+    "printWidth": 100,
     "semi": true,
     "singleQuote": true,
-    "trailingComma": "es5"
+    "trailingComma": "all",
+    "arrowParens": "always"
   },
   "name": "esbuild-plugin-glob",
   "author": "Wannes Salomé",
@@ -49,9 +50,18 @@
   "devDependencies": {
     "@size-limit/preset-small-lib": "^5.0.1",
     "@types/minimatch": "^3.0.4",
+    "@types/node": "14",
+    "@typescript-eslint/eslint-plugin": "^4.28.3",
+    "@waspeer/eslint-config": "^1.2.0",
+    "ava": "^3.15.0",
     "esbuild": "^0.12.14",
+    "eslint": "^7.30.0",
+    "eslint-plugin-ava": "^12.0.0",
+    "eslint-plugin-jest": "^24.3.6",
     "husky": "^6.0.0",
+    "nanoid": "^3.1.23",
     "size-limit": "^5.0.1",
+    "ts-node": "^10.1.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.4"

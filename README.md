@@ -23,6 +23,23 @@ esbuild.build({
 });
 ```
 
+By passing the option `controls: true` the `globPlugin` function returns a tuple with the plugin object and a controls object.
+
+```typescript
+import { globPlugin } from 'esbuild-plugin-glob';
+
+const [glob, globControls] = globPlugin({ controls: true });
+
+esbuild.build({
+  entryPoints: ['src/**/*.tsx'],
+  watch: true,
+  plugins: [glob],
+});
+
+// Stops watching the entry files when in watch mode
+await globControls.stopWatching();
+```
+
 ## How it works
 
 For single builds it simply resolves the provided glob patterns before esbuild runs.

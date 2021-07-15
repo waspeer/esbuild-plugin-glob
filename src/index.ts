@@ -1,32 +1,32 @@
 import chokidar from 'chokidar';
-import esbuild from 'esbuild';
+import * as esbuild from 'esbuild';
 import fs from 'fs';
 import match from 'minimatch';
 import path from 'path';
 import glob from 'tiny-glob';
 import invariant from 'tiny-invariant';
 
-interface GlobControls {
-  close: () => Promise<void>;
-}
-
-interface PluginOptions<TControls extends boolean> {
+interface GlobPluginOptions<TControls extends boolean> {
   /** Setting this to true returns a tuple with the plugin and a controls object */
   controls?: TControls;
 }
 
+interface GlobPluginControls {
+  /** Stops watching if in watch mode */
+  stopWatching: () => Promise<void>;
+}
+
 type ReturnValue<TControls extends boolean> = TControls extends true
-  ? [esbuild.Plugin, GlobControls]
+  ? [esbuild.Plugin, GlobPluginControls]
   : esbuild.Plugin;
 
 function globPlugin<TControls extends boolean = false>({
   controls,
-}: PluginOptions<TControls> = {}): ReturnValue<TControls> {
+}: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
   let watcher: chokidar.FSWatcher | undefined;
 
-  const controlFunctions = {
-    /** Stops watching if in watch mode */
-    async close() {
+  const controlFunctions: GlobPluginControls = {
+    async stopWatching() {
       if (!watcher) return;
       await watcher.close();
     },
@@ -42,7 +42,6 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (!!build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-
         watcher = chokidar.watch(entryGlobs);
 
         // AUGMENT OPTIONS
@@ -146,7 +145,7 @@ function globPlugin<TControls extends boolean = false>({
             });
           })
           .on('unlink', async unlinkedPath => {
-            if (!build.initialOptions.write) return;
+            if (build.initialOptions.write === false) return;
 
             const outputPaths = entryToOutputsMap.get(unlinkedPath);
 
