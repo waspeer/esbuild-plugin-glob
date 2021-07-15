@@ -31,7 +31,6 @@ function globPlugin<TControls extends boolean = false>({
     async stopWatching() {
       if (!context.watcher) return;
       await context.watcher.close();
-      console.log(context.watcher.getWatched());
     },
   };
 
