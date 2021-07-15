@@ -36,11 +36,11 @@ function globPlugin<TControls extends boolean = false>({
     name: 'glob',
     async setup(build) {
       if (!Array.isArray(build.initialOptions.entryPoints)) {
-        throw new Error('GlobPlugin currently only supports array entrypoints');
+        throw new TypeError('GlobPlugin currently only supports array entrypoints');
       }
 
       // Watch mode
-      if (!!build.initialOptions.watch) {
+      if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
         watcher = chokidar.watch(entryGlobs);
 
@@ -66,34 +66,31 @@ function globPlugin<TControls extends boolean = false>({
         // MAPS
         // ----
         const entryToInputsMap: Map<string, string[]> = new Map();
-        const entryToBuildResultMap: Map<
-          string,
-          esbuild.BuildResult
-        > = new Map();
+        const entryToBuildResultMap: Map<string, esbuild.BuildResult> = new Map();
         const entryToOutputsMap: Map<string, string[]> = new Map();
 
         // UTILITY FUNCTIONS
         // -----------------
         // Test if the provided path matches the entry globs
         const matchesGlobs = (filePath: string): boolean => {
-          return entryGlobs.some(glob => match(filePath, glob));
+          return entryGlobs.some((glob) => match(filePath, glob));
         };
 
         // Parse the build result and update watcher and maps
         const handleBuildResult = async (
           entry: string,
-          buildResult: esbuild.BuildResult
+          buildResult: esbuild.BuildResult,
         ): Promise<void> => {
           invariant(watcher);
           invariant(buildResult.metafile, 'Expected metafile to be created');
 
           const outputs = Object.keys(buildResult.metafile.outputs);
           const inputs = Object.values(buildResult.metafile.outputs)
-            .filter(output => !!output.entryPoint)
-            .flatMap(output =>
+            .filter((output) => !!output.entryPoint)
+            .flatMap((output) =>
               Object.keys(output.inputs)
-                .filter(input => !input.includes('node_modules'))
-                .map(input => normalizePath(input))
+                .filter((input) => !input.includes('node_modules'))
+                .map((input) => normalizePath(input)),
             );
 
           watcher.add(inputs);
@@ -107,6 +104,7 @@ function globPlugin<TControls extends boolean = false>({
 
         // Find the entries by the input path
         const findEntriesByInput = (input: string): string[] => {
+          // eslint-disable-next-line unicorn/prefer-spread
           return Array.from(entryToInputsMap.entries())
             .filter(([_entry, inputs]) => inputs.includes(input))
             .map(([entry]) => entry);
@@ -115,7 +113,7 @@ function globPlugin<TControls extends boolean = false>({
         // WATCH
         // -----
         watcher
-          .on('add', async addedPath => {
+          .on('add', async (addedPath) => {
             if (!matchesGlobs(addedPath)) return;
 
             console.log('[add]', addedPath);
@@ -127,38 +125,33 @@ function globPlugin<TControls extends boolean = false>({
 
             handleBuildResult(addedPath, buildResult);
           })
-          .on('change', async changedPath => {
+          .on('change', async (changedPath) => {
             const entries = findEntriesByInput(changedPath);
 
-            entries.forEach(async entry => {
+            entries.forEach(async (entry) => {
               console.log('[change]', entry);
 
               const oldResult = entryToBuildResultMap.get(entry);
 
-              invariant(
-                oldResult?.rebuild,
-                'Expected all build results to be incremental'
-              );
+              invariant(oldResult?.rebuild, 'Expected all build results to be incremental');
               const newResult = await oldResult.rebuild();
 
               handleBuildResult(entry, newResult);
             });
           })
-          .on('unlink', async unlinkedPath => {
+          .on('unlink', async (unlinkedPath) => {
             if (build.initialOptions.write === false) return;
 
             const outputPaths = entryToOutputsMap.get(unlinkedPath);
 
             if (outputPaths) {
               console.log('[unlink]', unlinkedPath);
-              outputPaths.forEach(outputPath => fs.unlinkSync(outputPath));
+              outputPaths.forEach((outputPath) => fs.unlinkSync(outputPath));
             }
           });
       } else {
         const resolvedEntryPoints = (
-          await Promise.all(
-            build.initialOptions.entryPoints.map(entryPoint => glob(entryPoint))
-          )
+          await Promise.all(build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)))
         ).flat();
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
