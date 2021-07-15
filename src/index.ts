@@ -6,8 +6,33 @@ import path from 'path';
 import glob from 'tiny-glob';
 import invariant from 'tiny-invariant';
 
-function globPlugin(): esbuild.Plugin {
-  return {
+interface GlobControls {
+  close: () => Promise<void>;
+}
+
+interface PluginOptions<TControls extends boolean> {
+  /** Setting this to true returns a tuple with the plugin and a controls object */
+  controls?: TControls;
+}
+
+type ReturnValue<TControls extends boolean> = TControls extends true
+  ? [esbuild.Plugin, GlobControls]
+  : esbuild.Plugin;
+
+function globPlugin<TControls extends boolean = false>({
+  controls,
+}: PluginOptions<TControls> = {}): ReturnValue<TControls> {
+  let watcher: chokidar.FSWatcher | undefined;
+
+  const controlFunctions = {
+    /** Stops watching if in watch mode */
+    async close() {
+      if (!watcher) return;
+      await watcher.close();
+    },
+  };
+
+  const plugin: esbuild.Plugin = {
     name: 'glob',
     async setup(build) {
       if (!Array.isArray(build.initialOptions.entryPoints)) {
@@ -17,7 +42,8 @@ function globPlugin(): esbuild.Plugin {
       // Watch mode
       if (!!build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        const watcher = chokidar.watch(entryGlobs);
+
+        watcher = chokidar.watch(entryGlobs);
 
         // AUGMENT OPTIONS
         // ---------------
@@ -59,6 +85,7 @@ function globPlugin(): esbuild.Plugin {
           entry: string,
           buildResult: esbuild.BuildResult
         ): Promise<void> => {
+          invariant(watcher);
           invariant(buildResult.metafile, 'Expected metafile to be created');
 
           const outputs = Object.keys(buildResult.metafile.outputs);
@@ -138,6 +165,8 @@ function globPlugin(): esbuild.Plugin {
       }
     },
   };
+
+  return (controls ? [plugin, controlFunctions] : plugin) as any;
 }
 
 // UTILITIES
