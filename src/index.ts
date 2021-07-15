@@ -23,12 +23,15 @@ type ReturnValue<TControls extends boolean> = TControls extends true
 function globPlugin<TControls extends boolean = false>({
   controls,
 }: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
-  let watcher: chokidar.FSWatcher | undefined;
+  const context = {
+    watcher: undefined as chokidar.FSWatcher | undefined,
+  };
 
   const controlFunctions: GlobPluginControls = {
     async stopWatching() {
-      if (!watcher) return;
-      await watcher.close();
+      if (!context.watcher) return;
+      await context.watcher.close();
+      console.log(context.watcher.getWatched());
     },
   };
 
@@ -42,7 +45,9 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        watcher = chokidar.watch(entryGlobs);
+        const watcher = chokidar.watch(entryGlobs);
+
+        context.watcher = watcher;
 
         // AUGMENT OPTIONS
         // ---------------
