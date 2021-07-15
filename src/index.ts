@@ -144,7 +144,7 @@ function globPlugin(): esbuild.Plugin {
 // ---------
 
 function normalizePath(filePath: string): string {
-  return path.relative(__dirname, filePath.replace(/^(\w+:)/, ''));
+  return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
 }
 
 export { globPlugin };
