@@ -24,7 +24,7 @@
     "dev": "rollup -c -w",
     "build": "rollup -c",
     "test": "ava",
-    "lint": "eslint '{src,test}/*.ts' --fix",
+    "lint": "eslint 'src/*.ts' 'test/*.ts'",
     "prepare": "yarn build && husky install",
     "version": "auto-changelog -p && git add CHANGELOG.md"
   },
