@@ -12,10 +12,11 @@ import { globPlugin } from '../src';
 // ------
 
 // -- Directories used for test files
-const FILE_DIR = path.resolve(__dirname, 'files');
+const FILE_DIR_NAME = 'files';
 const IN_DIR_NAME = 'input';
 const OUT_DIR_NAME = 'output';
 const DEPENDENCY_DIR_NAME = 'dependencies';
+const FILE_DIR = path.resolve(__dirname, FILE_DIR_NAME);
 
 // -- Config for assertion retrying
 const MAX_RETRIES = 50;
@@ -211,10 +212,13 @@ function runner(
   { watchMode } = { watchMode: true },
 ): Implementation<TestContext> {
   return async (t: ExecutionContext<TestContext>) => {
-    const directory = path.resolve(FILE_DIR, nanoid());
+    const directoryName = nanoid();
+    const directory = path.resolve(FILE_DIR, directoryName);
+
     const inputDirectory = path.resolve(directory, IN_DIR_NAME);
     const outputDirectory = path.resolve(directory, OUT_DIR_NAME);
     const dependencyDirectory = path.resolve(directory, DEPENDENCY_DIR_NAME);
+
     const [plugin, pluginControls] = globPlugin({
       controls: true,
     });
@@ -227,9 +231,11 @@ function runner(
     ]);
 
     function build() {
+      const globPath = path.relative(process.cwd(), path.resolve(inputDirectory, '**/*'));
+
       esbuild.build({
         bundle: true,
-        entryPoints: [path.resolve(inputDirectory, '**/*')],
+        entryPoints: [globPath.replace(/\\/g, '/')],
         plugins: [plugin],
         outdir: outputDirectory,
         watch: watchMode,
