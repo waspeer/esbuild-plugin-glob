@@ -351,7 +351,10 @@ class Dependency {
   }
 
   public get importStatement() {
-    return `import { ${this.name} } from '${this.path}';`;
+    const inDirectory = path.resolve(this.directory, IN_DIR_NAME);
+    const importPath = path.relative(inDirectory, this.path);
+
+    return `import { ${this.name} } from '${importPath}';`;
   }
 
   public get path() {
