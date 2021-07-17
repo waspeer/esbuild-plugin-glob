@@ -1,5 +1,3 @@
-import flat from 'array.prototype.flat';
-import flatMap from 'array.prototype.flatmap';
 import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fs from 'fs';
@@ -93,13 +91,13 @@ function globPlugin<TControls extends boolean = false>({
           invariant(buildResult.metafile, 'Expected metafile to be created');
 
           const outputs = Object.keys(buildResult.metafile.outputs);
-          const inputs = flatMap(
-            Object.values(buildResult.metafile.outputs).filter((output) => !!output.entryPoint),
-            (output) =>
+          const inputs = Object.values(buildResult.metafile.outputs)
+            .filter((output) => !!output.entryPoint)
+            .flatMap((output) =>
               Object.keys(output.inputs)
                 .filter((input) => !input.includes('node_modules'))
                 .map((input) => normalizePath(input)),
-          );
+            );
 
           watcher.add(inputs);
 
@@ -161,9 +159,9 @@ function globPlugin<TControls extends boolean = false>({
             }
           });
       } else {
-        const resolvedEntryPoints = flat(
-          await Promise.all(build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint))),
-        );
+        const resolvedEntryPoints = (
+          await Promise.all(build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)))
+        ).flat();
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
     },
