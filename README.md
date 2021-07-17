@@ -23,6 +23,19 @@ esbuild.build({
 });
 ```
 
+### API and defaults
+
+```typescript
+globPlugin({
+  // Options directly passed to chokidar when in watch mode
+  chokidarOptions: {}
+  // Make the function return a `controls` object, see below
+  controls: false
+})
+```
+
+### Controls
+
 By passing the option `controls: true` the `globPlugin` function returns a tuple with the plugin object and a controls object.
 
 ```typescript
