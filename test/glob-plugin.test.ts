@@ -1,8 +1,8 @@
 import type { ExecutionContext, Implementation, TestInterface } from 'ava';
 import untypedTest from 'ava';
+import del from 'del';
 import * as esbuild from 'esbuild';
-import { existsSync } from 'fs';
-import { promises as fs } from 'fs';
+import { existsSync, promises as fs } from 'fs';
 import { customAlphabet } from 'nanoid';
 import path from 'path';
 
@@ -88,8 +88,8 @@ test.serial(
 
     const oldStats = await fs.stat(testFile.outputPath);
 
-    // Give watcher some breathing room an change the entry file
-    await wait();
+    // Change the entry file
+    testFile.addDependency();
     await testFile.write();
 
     // Compare the old and new modified time from stats
@@ -141,6 +141,7 @@ test.serial(
     );
 
     // Remove entry file and make sure build is removed
+    await wait();
     await testFile.unlink();
     await retryAssertion(t, (tt) =>
       tt.false(existsSync(testFile.outputPath), 'the output file is removed'),
@@ -247,7 +248,7 @@ function runner(
     })().finally(async () => {
       // Teardown
       await pluginControls.stopWatching();
-      await fs.rm(directory, { recursive: true, force: true });
+      await del(directory);
     });
   };
 }
