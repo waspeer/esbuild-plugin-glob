@@ -352,7 +352,8 @@ class Dependency {
 
   public get importStatement() {
     const inDirectory = path.resolve(this.directory, IN_DIR_NAME);
-    const importPath = path.relative(inDirectory, this.path);
+    const pathWithoutExtension = path.resolve(this.directory, DEPENDENCY_DIR_NAME, this.name);
+    const importPath = path.relative(inDirectory, pathWithoutExtension);
 
     return `import { ${this.name} } from '${importPath}';`;
   }
