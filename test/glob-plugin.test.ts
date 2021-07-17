@@ -354,7 +354,7 @@ class Dependency {
     const inputDirectory = path.resolve(this.directory, IN_DIR_NAME);
     const bla = path.join(this.directory, DEPENDENCY_DIR_NAME, this.name);
     const importPath = path.relative(inputDirectory, bla);
-    return `import { ${this.name} } from '${importPath}';`;
+    return `import { ${this.name} } from '${importPath.replace('/\\/g', '/')}';`;
   }
 
   public get path() {
