@@ -216,7 +216,6 @@ function runner(
     const outputDirectory = path.resolve(directory, OUT_DIR_NAME);
     const dependencyDirectory = path.resolve(directory, DEPENDENCY_DIR_NAME);
     const [plugin, pluginControls] = globPlugin({
-      chokidarOptions: { useFsEvents: true },
       controls: true,
     });
 
