@@ -18,7 +18,7 @@
     "src"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "scripts": {
     "dev": "rollup -c -w",
@@ -32,7 +32,7 @@
     "esbuild": "^0.12.14"
   },
   "devDependencies": {
-    "@tsconfig/node10": "^1.0.8",
+    "@tsconfig/node12": "^1.0.9",
     "@types/array.prototype.flat": "^1.2.1",
     "@types/array.prototype.flatmap": "^1.2.2",
     "@types/minimatch": "^3.0.4",
