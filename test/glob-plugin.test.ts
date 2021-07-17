@@ -237,6 +237,7 @@ function runner(
 
     if (watchMode) {
       build();
+      await wait();
     }
 
     t.context.build = build;
