@@ -88,7 +88,8 @@ test.serial(
 
     const oldStats = await fs.stat(testFile.outputPath);
 
-    // Change the entry file
+    // Give watcher some breathing room an change the entry file
+    await wait();
     await testFile.write();
 
     // Compare the old and new modified time from stats
@@ -197,6 +198,10 @@ async function retryAssertion(t: ExecutionContext, assertion: Implementation): P
 
     planNextCheck();
   });
+}
+
+async function wait(ms = 500) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // -- TEST RUNNER
