@@ -2,7 +2,7 @@ import type { ExecutionContext, Implementation, TestInterface } from 'ava';
 import untypedTest from 'ava';
 import * as esbuild from 'esbuild';
 import { existsSync } from 'fs';
-import fs from 'fs/promises';
+import { promises as fs } from 'fs';
 import { customAlphabet } from 'nanoid';
 import path from 'path';
 
