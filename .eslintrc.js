@@ -1,10 +1,6 @@
 module.exports = {
-  extends: ['@waspeer/eslint-config', 'plugin:jest/recommended'],
-  env: {
-    node: true,
-  },
+  extends: ['@waspeer/eslint-config'],
   rules: {
     'unicorn/no-null': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
   },
 };

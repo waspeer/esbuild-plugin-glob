@@ -109,9 +109,12 @@ function globPlugin<TControls extends boolean = false>({
         // Find the entries by the input path
         const findEntriesByInput = (input: string): string[] => {
           // eslint-disable-next-line unicorn/prefer-spread
-          return Array.from(entryToInputsMap.entries())
-            .filter(([_entry, inputs]) => inputs.includes(input))
-            .map(([entry]) => entry);
+          return (
+            [...entryToInputsMap.entries()]
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              .filter(([_entry, inputs]) => inputs.includes(input))
+              .map(([entry]) => entry)
+          );
         };
 
         // WATCH

@@ -1,3 +1,5 @@
+import type { ExecutionContext, Implementation, TestInterface } from 'ava';
+import untypedTest from 'ava';
 import * as esbuild from 'esbuild';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
@@ -9,13 +11,28 @@ import { globPlugin } from '../src';
 // CONFIG
 // ------
 
+// -- Directories used for test files
 const FILE_DIR = path.resolve(__dirname, 'files');
 const IN_DIR_NAME = 'input';
 const OUT_DIR_NAME = 'output';
 const DEPENDENCY_DIR_NAME = 'dependencies';
 
-// Used to create directory and file names
+// -- Config for assertion retrying
+const MAX_RETRIES = 50;
+const RETRY_INTERVAL = 100;
+
+// -- Used to create directory and file names
 const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 10);
+
+// -- Type the untyped
+interface TestContext {
+  /** Triggers a build */
+  build: () => void;
+  /** Unique directory for current test */
+  directory: string;
+}
+
+const test = untypedTest as TestInterface<TestContext>;
 
 // SINGLE RUN
 // ----------
@@ -23,15 +40,17 @@ const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 test(
   'the plugin resolves the provided globs',
   runner(
-    async ({ build, directory }) => {
+    async (t) => {
+      const { build, directory } = t.context;
       const entryFile1 = await createEntryFile({ directory });
       const entryFile2 = await createEntryFile({ directory });
 
       build();
-      await wait();
 
-      expect(existsSync(entryFile1.outputPath)).toBe(true);
-      expect(existsSync(entryFile2.outputPath)).toBe(true);
+      await retryAssertion(t, (tt) => {
+        tt.true(existsSync(entryFile1.outputPath));
+        tt.true(existsSync(entryFile2.outputPath));
+      });
     },
     { watchMode: false },
   ),
@@ -41,81 +60,97 @@ test(
 // ----------
 
 // -- ADD
-test(
+test.serial(
   'the plugin builds newly added files',
-  runner(async ({ directory }) => {
-    const entryFile = await createEntryFile({ directory });
+  runner(async (t) => {
+    const { directory } = t.context;
+    const testFile = await createEntryFile({ directory });
 
-    expect(existsSync(entryFile.path)).toBe(true);
-    expect(existsSync(entryFile.outputPath)).toBe(true);
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(testFile.path), 'the entry file was written');
+      tt.true(existsSync(testFile.outputPath), 'the output file was built');
+    });
   }),
 );
 
 // -- CHANGE
-test(
+test.serial(
   'the plugin triggers a new build when the entry file changes',
-  runner(async ({ directory }) => {
-    // Make entry file and get the file stats
-    const entryFile = await createEntryFile({
-      directory,
-      withDependency: true,
+  runner(async (t) => {
+    const { directory } = t.context;
+
+    // Make test file and get the file stats
+    const testFile = await createEntryFile({ directory });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(testFile.outputPath), 'the output file is built');
     });
-    const oldStats = await fs.stat(entryFile.outputPath);
 
-    // Modify the entry file and get the new stats
-    await entryFile.write({ dependencies: false, entry: true });
-    await wait();
+    const oldStats = await fs.stat(testFile.outputPath);
 
-    const newStats = await fs.stat(entryFile.outputPath);
+    // Change the entry file
+    await testFile.write();
 
     // Compare the old and new modified time from stats
-    expect(oldStats.mtime.getTime() < newStats.mtime.getTime()).toBe(true);
+    await retryAssertion(t, async (tt) => {
+      const newStats = await fs.stat(testFile.outputPath);
+      tt.true(oldStats.mtime.getTime() < newStats.mtime.getTime(), 'the output file was modified');
+    });
   }),
 );
 
-test(
+test.serial(
   'the plugin triggers a new build when a dependency of an entry file changes',
-  runner(async ({ directory }) => {
-    // Make entry file and get the file stats
-    const entryFile = await createEntryFile({
-      directory,
-      withDependency: true,
-    });
-    const oldStats = await fs.stat(entryFile.outputPath);
+  runner(async (t) => {
+    const { directory } = t.context;
 
-    // Modify the dependency and get the new stats
-    entryFile.addDependency();
-    await entryFile.write({ dependencies: true, entry: false });
-    await wait();
+    // Make test file and get the file stats
+    const testFile = await createEntryFile({ directory, withDependency: true });
 
-    const newStats = await fs.stat(entryFile.outputPath);
+    await retryAssertion(t, (tt) =>
+      tt.true(existsSync(testFile.outputPath), 'the entry file is built'),
+    );
+
+    const oldStats = await fs.stat(testFile.outputPath);
+
+    // Modify the dependency
+    testFile.addDependency();
+    await testFile.write({ dependencies: true, entry: false });
 
     // Compare the old and new modified time from stats
-    expect(oldStats.mtime.getTime() < newStats.mtime.getTime()).toBe(true);
+    await retryAssertion(t, async (tt) => {
+      const newStats = await fs.stat(testFile.outputPath);
+      tt.true(oldStats.mtime.getTime() < newStats.mtime.getTime(), 'the output file was modified');
+    });
   }),
 );
 
 // -- UNLINK
 
-test(
+test.serial(
   'the plugin removes the output file when a watched entry file is removed',
-  runner(async ({ directory }) => {
-    const entryFile = await createEntryFile({ directory });
+  runner(async (t) => {
+    const { directory } = t.context;
 
-    expect(existsSync(entryFile.outputPath)).toBe(true);
+    // Make entry file and make sure build exists
+    const testFile = await createEntryFile({ directory });
+
+    await retryAssertion(t, (tt) =>
+      tt.true(existsSync(testFile.outputPath), 'the entry file is built'),
+    );
 
     // Remove entry file and make sure build is removed
-    await entryFile.unlink();
-    await wait();
-
-    expect(existsSync(entryFile.outputPath)).toBe(false);
+    await testFile.unlink();
+    await retryAssertion(t, (tt) =>
+      tt.false(existsSync(testFile.outputPath), 'the output file is removed'),
+    );
   }),
 );
 
 // UTILITY
 // -------
 
-/** Utility function to create and write an entry file */
+/** Convenience function to create and write an entry file */
 async function createEntryFile({
   directory,
   withDependency = false,
@@ -129,31 +164,48 @@ async function createEntryFile({
     entryFile.addDependency();
   }
 
-  // Write file and wait for the plugin to pick it up
   await entryFile.write();
-  await wait();
-
   return entryFile;
 }
 
-/** If awaited, waits the provided amount of milliseconds */
-async function wait(ms = 500) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/** Retries the assertion every x ms for a maximum amount of times */
+async function retryAssertion(t: ExecutionContext, assertion: Implementation): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let tried = 0;
+
+    function planNextCheck() {
+      setTimeout(async () => {
+        tried += 1;
+
+        const maxRetriesReached = tried >= MAX_RETRIES;
+        const attempt = await t.try(assertion);
+
+        if (attempt.passed) {
+          attempt.commit();
+          return resolve();
+        }
+
+        if (maxRetriesReached) {
+          attempt.commit();
+          return reject();
+        }
+
+        attempt.discard();
+        planNextCheck();
+      }, RETRY_INTERVAL);
+    }
+
+    planNextCheck();
+  });
 }
 
 // -- TEST RUNNER
 
-interface TestContext {
-  build: () => void;
-  /** Unique directory for the current test */
-  directory: string;
-}
-
 function runner(
-  testFunction: (testContext: TestContext) => Promise<void>,
+  testFunction: Implementation<TestContext>,
   { watchMode } = { watchMode: true },
-): () => Promise<void> {
-  return async () => {
+): Implementation<TestContext> {
+  return async (t: ExecutionContext<TestContext>) => {
     const directory = path.resolve(FILE_DIR, nanoid());
     const inputDirectory = path.resolve(directory, IN_DIR_NAME);
     const outputDirectory = path.resolve(directory, OUT_DIR_NAME);
@@ -181,8 +233,13 @@ function runner(
       build();
     }
 
+    t.context.build = build;
+    t.context.directory = directory;
+
     // Test
-    await testFunction({ build, directory }).finally(async () => {
+    await (async () => {
+      await testFunction(t);
+    })().finally(async () => {
       // Teardown
       await pluginControls.stopWatching();
       await fs.rm(directory, { recursive: true, force: true });
@@ -191,7 +248,6 @@ function runner(
 }
 
 // -- ENTRY FILE
-
 interface EntryFileRecipe {
   name?: string;
   directory: string;
@@ -262,7 +318,6 @@ class EntryFile {
 }
 
 // -- DEPENDENCY
-
 interface DependencyRecipe {
   directory: string;
   name?: string;
