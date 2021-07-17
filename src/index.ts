@@ -46,7 +46,7 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        const watcher = chokidar.watch(entryGlobs);
+        const watcher = chokidar.watch(entryGlobs, { usePolling: true });
 
         context.watcher = watcher;
 
