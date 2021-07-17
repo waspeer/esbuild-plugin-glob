@@ -89,7 +89,6 @@ test.serial(
     const oldStats = await fs.stat(testFile.outputPath);
 
     // Change the entry file
-    testFile.addDependency();
     await testFile.write();
 
     // Compare the old and new modified time from stats
@@ -216,7 +215,10 @@ function runner(
     const inputDirectory = path.resolve(directory, IN_DIR_NAME);
     const outputDirectory = path.resolve(directory, OUT_DIR_NAME);
     const dependencyDirectory = path.resolve(directory, DEPENDENCY_DIR_NAME);
-    const [plugin, pluginControls] = globPlugin({ controls: true });
+    const [plugin, pluginControls] = globPlugin({
+      chokidarOptions: { useFsEvents: true },
+      controls: true,
+    });
 
     // Prepare
     await Promise.all([
@@ -280,6 +282,7 @@ class EntryFile {
 
     // Default content
     contents.push(`console.log('NAME', '${this.name}');`);
+    contents.push(`console.log('RANDOM STRING', '${nanoid()}');`);
 
     // Dependency content
     this.dependencies.forEach((dependency) => {

@@ -9,6 +9,7 @@ import glob from 'tiny-glob';
 import invariant from 'tiny-invariant';
 
 interface GlobPluginOptions<TControls extends boolean> {
+  chokidarOptions?: chokidar.WatchOptions;
   /** Setting this to true returns a tuple with the plugin and a controls object */
   controls?: TControls;
 }
@@ -23,6 +24,7 @@ type ReturnValue<TControls extends boolean> = TControls extends true
   : esbuild.Plugin;
 
 function globPlugin<TControls extends boolean = false>({
+  chokidarOptions,
   controls,
 }: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
   const context = {
@@ -46,7 +48,7 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        const watcher = chokidar.watch(entryGlobs, { usePolling: true });
+        const watcher = chokidar.watch(entryGlobs, chokidarOptions);
 
         context.watcher = watcher;
 
