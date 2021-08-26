@@ -58,7 +58,10 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        const watcher = chokidar.watch(entryGlobs, chokidarOptions);
+        const watcher = chokidar.watch(entryGlobs, {
+          cwd: build.initialOptions.absWorkingDir,
+          ...chokidarOptions,
+        });
 
         context.watcher = watcher;
 
@@ -112,7 +115,7 @@ function globPlugin<TControls extends boolean = false>({
             .flatMap((output) =>
               Object.keys(output.inputs)
                 .filter((input) => !input.includes('node_modules'))
-                .map((input) => normalizePath(input)),
+                .map((input) => normalizePath(input, build.initialOptions.absWorkingDir)),
             );
 
           watcher.add(inputs);
@@ -186,8 +189,8 @@ function globPlugin<TControls extends boolean = false>({
 // UTILITIES
 // ---------
 
-function normalizePath(filePath: string): string {
-  return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
+function normalizePath(filePath: string, cwd: string = process.cwd()): string {
+  return path.relative(cwd, filePath.replace(/^(\w+:)/, ''));
 }
 
 export { globPlugin };
