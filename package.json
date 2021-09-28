@@ -29,7 +29,7 @@
     "version": "auto-changelog -p && git add CHANGELOG.md"
   },
   "peerDependencies": {
-    "esbuild": "^0.13.2"
+    "esbuild": "^0.x.x"
   },
   "devDependencies": {
     "@tsconfig/node12": "^1.0.9",
