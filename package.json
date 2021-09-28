@@ -1,6 +1,6 @@
 {
   "name": "esbuild-plugin-glob",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "description": "glob entry points in esbuild",
   "author": "Wannes Salomé <mail@wannessalome.nl>",
