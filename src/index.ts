@@ -1,6 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path = "./lowest-common-ancestor.d.ts" />
+
 import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fs from 'fs';
+import { lowestCommonAncestor } from 'lowest-common-ancestor';
 import match from 'minimatch';
 import path from 'path';
 import glob from 'tiny-glob';
@@ -43,10 +47,21 @@ function globPlugin<TControls extends boolean = false>({
         throw new TypeError('GlobPlugin currently only supports array entrypoints');
       }
 
+      const resolvedEntryPoints = (
+        await Promise.all(
+          build.initialOptions.entryPoints.map((entryPoint) =>
+            glob(entryPoint, { cwd: build.initialOptions.absWorkingDir, filesOnly: true }),
+          ),
+        )
+      ).flat();
+
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = build.initialOptions.entryPoints;
-        const watcher = chokidar.watch(entryGlobs, chokidarOptions);
+        const watcher = chokidar.watch(entryGlobs, {
+          cwd: build.initialOptions.absWorkingDir,
+          ...chokidarOptions,
+        });
 
         context.watcher = watcher;
 
@@ -65,6 +80,10 @@ function globPlugin<TControls extends boolean = false>({
         // Plugin relies on incremental and metafile options
         const sharedOptions = {
           ...build.initialOptions,
+          // Calculate the lowest common ancestor or esbuild will incorrectly
+          // determine it from the single entrypoint that is added/changed.
+          // @see https://esbuild.github.io/api/#outbase
+          outbase: build.initialOptions.outbase || lowestCommonAncestor(...resolvedEntryPoints),
           incremental: true,
           metafile: true,
         };
@@ -96,7 +115,7 @@ function globPlugin<TControls extends boolean = false>({
             .flatMap((output) =>
               Object.keys(output.inputs)
                 .filter((input) => !input.includes('node_modules'))
-                .map((input) => normalizePath(input)),
+                .map((input) => normalizePath(input, build.initialOptions.absWorkingDir)),
             );
 
           watcher.add(inputs);
@@ -159,9 +178,6 @@ function globPlugin<TControls extends boolean = false>({
             }
           });
       } else {
-        const resolvedEntryPoints = (
-          await Promise.all(build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)))
-        ).flat();
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
     },
@@ -173,8 +189,8 @@ function globPlugin<TControls extends boolean = false>({
 // UTILITIES
 // ---------
 
-function normalizePath(filePath: string): string {
-  return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
+function normalizePath(filePath: string, cwd: string = process.cwd()): string {
+  return path.relative(cwd, filePath.replace(/^(\w+:)/, ''));
 }
 
 export { globPlugin };
