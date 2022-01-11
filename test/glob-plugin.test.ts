@@ -1,4 +1,4 @@
-import type { ExecutionContext, Implementation, TestInterface } from 'ava';
+import type { ExecutionContext, ImplementationFn, TestFn } from 'ava';
 import untypedTest from 'ava';
 import del from 'del';
 import * as esbuild from 'esbuild';
@@ -33,7 +33,7 @@ interface TestContext {
   directory: string;
 }
 
-const test = untypedTest as TestInterface<TestContext>;
+const test = untypedTest as TestFn<TestContext>;
 
 // SINGLE RUN
 // ----------
@@ -171,7 +171,10 @@ async function createEntryFile({
 }
 
 /** Retries the assertion every x ms for a maximum amount of times */
-async function retryAssertion(t: ExecutionContext, assertion: Implementation): Promise<void> {
+async function retryAssertion(
+  t: ExecutionContext,
+  assertion: ImplementationFn<any, any>,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     let tried = 0;
 
@@ -208,9 +211,9 @@ async function wait(ms = 500) {
 // -- TEST RUNNER
 
 function runner(
-  testFunction: Implementation<TestContext>,
-  { watchMode } = { watchMode: true },
-): Implementation<TestContext> {
+  testFunction: ImplementationFn<unknown[], TestContext>,
+  { watchMode = true } = {},
+): ImplementationFn<unknown[], TestContext> {
   return async (t: ExecutionContext<TestContext>) => {
     const directoryName = nanoid();
     const directory = path.resolve(FILE_DIR, directoryName);
@@ -286,8 +289,10 @@ class EntryFile {
     });
 
     // Default content
-    contents.push(`console.log('NAME', '${this.name}');`);
-    contents.push(`console.log('RANDOM STRING', '${nanoid()}');`);
+    contents.push(
+      `console.log('NAME', '${this.name}');`,
+      `console.log('RANDOM STRING', '${nanoid()}');`,
+    );
 
     // Dependency content
     this.dependencies.forEach((dependency) => {
@@ -309,7 +314,7 @@ class EntryFile {
     this.dependencies.push(new Dependency({ directory: this.directory }));
   }
 
-  public async unlink({ dependencies, entry } = { dependencies: false, entry: true }) {
+  public async unlink({ dependencies = false, entry = true } = {}) {
     if (dependencies) {
       await Promise.all(this.dependencies.map((dependency) => fs.unlink(dependency.path)));
     }
@@ -319,7 +324,7 @@ class EntryFile {
     }
   }
 
-  public async write({ dependencies, entry } = { dependencies: true, entry: true }) {
+  public async write({ dependencies = true, entry = true } = {}) {
     if (dependencies) {
       await Promise.all(
         this.dependencies.map((dependency) => fs.writeFile(dependency.path, dependency.contents)),

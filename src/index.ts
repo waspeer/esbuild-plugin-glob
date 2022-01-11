@@ -159,9 +159,9 @@ function globPlugin<TControls extends boolean = false>({
             }
           });
       } else {
-        const resolvedEntryPoints = (
-          await Promise.all(build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)))
-        ).flat();
+        const resolvedEntryPoints = await Promise.all(
+          build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)),
+        ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
     },
