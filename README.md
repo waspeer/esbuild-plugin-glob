@@ -1,8 +1,6 @@
 <h1 align="center">⚡️ esbuild plugin glob ⚡️</h1>
 <p align="center">
-
-  ![Known Vulnerabilities](https://snyk.io/test/github/waspeer/esbuild-plugin-glob/badge.svg)
-
+  <img src="https://snyk.io/test/github/waspeer/esbuild-plugin-glob/badge.svg" />
 </p>
 <p align="center"><b>Use glob entry points in esbuild.</b></p>
 
