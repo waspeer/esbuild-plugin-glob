@@ -26,7 +26,7 @@
     "version": "auto-changelog -p && git add CHANGELOG.md"
   },
   "dependencies": {
-    "chokidar": "^3.5.2",
+    "chokidar": "^3.5.3",
     "minimatch": "^3.0.4",
     "tiny-glob": "^0.2.9",
     "tiny-invariant": "^1.2.0"
