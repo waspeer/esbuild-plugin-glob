@@ -10,6 +10,8 @@ interface GlobPluginOptions<TControls extends boolean> {
   chokidarOptions?: chokidar.WatchOptions;
   /** Setting this to true returns a tuple with the plugin and a controls object */
   controls?: TControls;
+  /** Disables all logging */
+  quiet?: boolean;
 }
 
 interface GlobPluginControls {
@@ -24,7 +26,10 @@ type ReturnValue<TControls extends boolean> = TControls extends true
 function globPlugin<TControls extends boolean = false>({
   chokidarOptions,
   controls,
+  quiet = false,
 }: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
+  const log = createLogger(quiet);
+
   const context = {
     watcher: undefined as chokidar.FSWatcher | undefined,
   };
@@ -125,7 +130,7 @@ function globPlugin<TControls extends boolean = false>({
           .on('add', async (addedPath) => {
             if (!matchesGlobs(addedPath)) return;
 
-            console.log('[add]', addedPath);
+            log('[add]', addedPath);
 
             const buildResult = await esbuild.build({
               ...sharedOptions,
@@ -138,7 +143,7 @@ function globPlugin<TControls extends boolean = false>({
             const entries = findEntriesByInput(changedPath);
 
             entries.forEach(async (entry) => {
-              console.log('[change]', entry);
+              log('[change]', entry);
 
               const oldResult = entryToBuildResultMap.get(entry);
 
@@ -154,7 +159,7 @@ function globPlugin<TControls extends boolean = false>({
             const outputPaths = entryToOutputsMap.get(unlinkedPath);
 
             if (outputPaths) {
-              console.log('[unlink]', unlinkedPath);
+              log('[unlink]', unlinkedPath);
               outputPaths.forEach((outputPath) => fs.unlinkSync(outputPath));
             }
           });
@@ -175,6 +180,12 @@ function globPlugin<TControls extends boolean = false>({
 
 function normalizePath(filePath: string): string {
   return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
+}
+
+function createLogger(quiet: boolean) {
+  return (...arguments_: Parameters<typeof console.log>) => {
+    if (!quiet) console.log(...arguments_);
+  };
 }
 
 export { globPlugin };

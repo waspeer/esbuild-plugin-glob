@@ -35,6 +35,8 @@ globPlugin({
   chokidarOptions: {}
   // Make the function return a `controls` object, see below
   controls: false
+  // Disables logging on file changes
+  quiet: false
 })
 ```
 
