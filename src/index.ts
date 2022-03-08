@@ -131,14 +131,12 @@ function globPlugin<TControls extends boolean = false>({
 
             log('[add]', addedPath);
 
-            const buildOptions: esbuild.BuildOptions = {
+            const buildResult = await esbuild.build({
               ...sharedOptions,
               entryPoints: [addedPath],
-            };
-
-            await ignoreError(async () => {
-              handleBuildResult(addedPath, await esbuild.build(buildOptions));
             });
+
+            handleBuildResult(addedPath, buildResult);
           })
           .on('change', async (changedPath) => {
             const entries = findEntriesByInput(changedPath);
@@ -148,10 +146,12 @@ function globPlugin<TControls extends boolean = false>({
 
               const oldResult = entryToBuildResultMap.get(entry);
 
-              await ignoreError(async () => {
+              try {
                 invariant(oldResult?.rebuild, 'Expected all build results to be incremental');
                 handleBuildResult(entry, await oldResult.rebuild());
-              });
+              } catch {
+                //? Error is ignored, because esbuild handles logging of build errors already
+              }
             });
           })
           .on('unlink', async (unlinkedPath) => {
@@ -178,14 +178,6 @@ function globPlugin<TControls extends boolean = false>({
 
 // UTILITIES
 // ---------
-
-async function ignoreError(function_: (...arguments_: any[]) => Promise<void>) {
-  try {
-    await function_();
-  } catch {
-    //? Error is ignored, because esbuild handles logging of build errors already
-  }
-}
 
 function createLogger(silent: boolean) {
   return (...arguments_: Parameters<typeof console.log>) => {

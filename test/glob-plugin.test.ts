@@ -126,6 +126,37 @@ test.serial(
   }),
 );
 
+test.serial(
+  'the plugin should not crash when adding syntax errors to a file',
+  runner(async (t) => {
+    const { directory } = t.context;
+
+    // Make test file and get the file stats
+    const testFile = await createEntryFile({ directory });
+
+    await retryAssertion(t, (tt) =>
+      tt.true(existsSync(testFile.outputPath), 'the entry file is built'),
+    );
+
+    const oldStats = await fs.stat(testFile.outputPath);
+
+    // Modify the file
+    testFile.addSyntaxError();
+    await testFile.write();
+    await wait(100);
+
+    // Modify the file again
+    testFile.removeSyntaxError();
+    await testFile.write();
+
+    // Compare the old and new modified time from stats
+    await retryAssertion(t, async (tt) => {
+      const newStats = await fs.stat(testFile.outputPath);
+      tt.true(oldStats.mtime.getTime() < newStats.mtime.getTime(), 'the output file was modified');
+    });
+  }),
+);
+
 // -- UNLINK
 
 test.serial(
@@ -156,14 +187,20 @@ test.serial(
 async function createEntryFile({
   directory,
   withDependency = false,
+  withSyntaxError = false,
 }: {
   directory: string;
   withDependency?: boolean;
+  withSyntaxError?: boolean;
 }) {
   const entryFile = new EntryFile({ directory });
 
   if (withDependency) {
     entryFile.addDependency();
+  }
+
+  if (withSyntaxError) {
+    entryFile.addSyntaxError();
   }
 
   await entryFile.write();
@@ -274,6 +311,7 @@ class EntryFile {
   public readonly directory: string;
   public readonly name: string;
   public readonly dependencies: Dependency[] = [];
+  public hasSyntaxError = false;
 
   constructor({ name = nanoid(), directory }: EntryFileRecipe) {
     this.name = name;
@@ -288,10 +326,11 @@ class EntryFile {
       contents.push(dependency.importStatement);
     });
 
-    // Default content
+    // Content
     contents.push(
       `console.log('NAME', '${this.name}');`,
       `console.log('RANDOM STRING', '${nanoid()}');`,
+      this.hasSyntaxError ? 'import;' : '',
     );
 
     // Dependency content
@@ -312,6 +351,14 @@ class EntryFile {
 
   public addDependency() {
     this.dependencies.push(new Dependency({ directory: this.directory }));
+  }
+
+  public addSyntaxError() {
+    this.hasSyntaxError = true;
+  }
+
+  public removeSyntaxError() {
+    this.hasSyntaxError = false;
   }
 
   public async unlink({ dependencies = false, entry = true } = {}) {
