@@ -115,7 +115,6 @@ function globPlugin<TControls extends boolean = false>({
 
         // Find the entries by the input path
         const findEntriesByInput = (input: string): string[] => {
-          // eslint-disable-next-line unicorn/prefer-spread
           return (
             [...entryToInputsMap.entries()]
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -132,12 +131,14 @@ function globPlugin<TControls extends boolean = false>({
 
             log('[add]', addedPath);
 
-            const buildResult = await esbuild.build({
+            const buildOptions: esbuild.BuildOptions = {
               ...sharedOptions,
               entryPoints: [addedPath],
-            });
+            };
 
-            handleBuildResult(addedPath, buildResult);
+            await ignoreError(async () => {
+              handleBuildResult(addedPath, await esbuild.build(buildOptions));
+            });
           })
           .on('change', async (changedPath) => {
             const entries = findEntriesByInput(changedPath);
@@ -147,10 +148,10 @@ function globPlugin<TControls extends boolean = false>({
 
               const oldResult = entryToBuildResultMap.get(entry);
 
-              invariant(oldResult?.rebuild, 'Expected all build results to be incremental');
-              const newResult = await oldResult.rebuild();
-
-              handleBuildResult(entry, newResult);
+              await ignoreError(async () => {
+                invariant(oldResult?.rebuild, 'Expected all build results to be incremental');
+                handleBuildResult(entry, await oldResult.rebuild());
+              });
             });
           })
           .on('unlink', async (unlinkedPath) => {
@@ -178,14 +179,22 @@ function globPlugin<TControls extends boolean = false>({
 // UTILITIES
 // ---------
 
-function normalizePath(filePath: string): string {
-  return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
+async function ignoreError(function_: (...arguments_: any[]) => Promise<void>) {
+  try {
+    await function_();
+  } catch {
+    //? Error is ignored, because esbuild handles logging of build errors already
+  }
 }
 
 function createLogger(silent: boolean) {
   return (...arguments_: Parameters<typeof console.log>) => {
     if (!silent) console.log(...arguments_);
   };
+}
+
+function normalizePath(filePath: string): string {
+  return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
 }
 
 export { globPlugin };
