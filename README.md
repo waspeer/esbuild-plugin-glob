@@ -12,7 +12,7 @@ This plugin allows the usage of [glob patterns](https://en.wikipedia.org/wiki/Gl
 Use a package manager like [yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/)
 
 ```bash
-yarn install esbuild-plugin-glob
+yarn add esbuild-plugin-glob
 ```
 
 ## Usage
