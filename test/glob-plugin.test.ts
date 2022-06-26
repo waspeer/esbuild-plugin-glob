@@ -1,10 +1,11 @@
-import type { ExecutionContext, ImplementationFn, TestFn } from 'ava';
 import untypedTest from 'ava';
 import del from 'del';
 import * as esbuild from 'esbuild';
 import { existsSync, promises as fs } from 'fs';
 import { customAlphabet } from 'nanoid';
 import path from 'path';
+
+import type { ExecutionContext, ImplementationFn, TestFn } from 'ava';
 
 import { globPlugin } from '../src';
 
