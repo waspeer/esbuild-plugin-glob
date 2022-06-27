@@ -12,6 +12,7 @@ interface GlobPluginOptions<TControls extends boolean> {
   controls?: TControls;
   /** Disables all logging */
   silent?: boolean;
+  additionalEntrypoints?: string[];
 }
 
 interface GlobPluginControls {
@@ -27,6 +28,7 @@ function globPlugin<TControls extends boolean = false>({
   chokidarOptions,
   controls,
   silent = false,
+  additionalEntrypoints = [],
 }: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
   const log = createLogger(silent);
 
@@ -44,13 +46,17 @@ function globPlugin<TControls extends boolean = false>({
   const plugin: esbuild.Plugin = {
     name: 'glob',
     async setup(build) {
-      if (!Array.isArray(build.initialOptions.entryPoints)) {
+      if (
+        !Array.isArray(build.initialOptions.entryPoints) ||
+        !Array.isArray(additionalEntrypoints)
+      ) {
         throw new TypeError('GlobPlugin currently only supports array entrypoints');
       }
 
       // Watch mode
       if (build.initialOptions.watch) {
-        const entryGlobs = build.initialOptions.entryPoints;
+        const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
+
         const watcher = chokidar.watch(entryGlobs, chokidarOptions);
 
         context.watcher = watcher;
@@ -165,8 +171,9 @@ function globPlugin<TControls extends boolean = false>({
             }
           });
       } else {
+        const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
         const resolvedEntryPoints = await Promise.all(
-          build.initialOptions.entryPoints.map((entryPoint) => glob(entryPoint)),
+          entryGlobs.map((entryPoint) => glob(entryPoint)),
         ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
