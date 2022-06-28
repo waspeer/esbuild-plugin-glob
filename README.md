@@ -31,12 +31,14 @@ esbuild.build({
 
 ```typescript
 globPlugin({
+  // Optional additional entrypoints/glob patterns
+  additionalEntrypoints: [],
   // Options directly passed to chokidar when in watch mode
-  chokidarOptions: {}
+  chokidarOptions: {},
   // Make the function return a `controls` object, see below
-  controls: false
+  controls: false,
   // Disables logging on file changes
-  silent: false
+  silent: false,
 })
 ```
 
