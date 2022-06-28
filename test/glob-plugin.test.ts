@@ -1,52 +1,192 @@
 import { existsSync, promises as fs } from 'fs';
 
-import { runner, test } from './runner';
-import { createEntryFile, retryAssertion, wait } from './util';
+import { runner, test } from './lib/runner';
+import { createEntryFile, retryAssertion, wait } from './lib/util';
 
 // SINGLE RUN
 // ----------
 
 test(
-  'the plugin resolves the provided globs',
-  runner(
-    async (t) => {
-      const { build, directory } = t.context;
-      const entryFile1 = await createEntryFile({ directory });
-      const entryFile2 = await createEntryFile({ directory });
+  'the plugin resolves globs provided as entrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [entryFile1, entryFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
 
-      build();
+    await build({
+      entryPoints: ['**/*.entry.ts'],
+      watchMode: false,
+    });
 
-      await retryAssertion(t, (tt) => {
-        tt.true(existsSync(entryFile1.outputPath));
-        tt.true(existsSync(entryFile2.outputPath));
-      });
-    },
-    { watchMode: false },
-  ),
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile1.outputPath));
+      tt.true(existsSync(entryFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
+test(
+  'the plugin handles non-glob entrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [entryFile1, entryFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: [entryFile1.path, entryFile2.path],
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile1.outputPath));
+      tt.true(existsSync(entryFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
+test(
+  'the plugin resolves globs provided as additionalEntrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [additionalFile1, additionalFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: [],
+      pluginOptions: {
+        additionalEntrypoints: ['**/*.additional.ts'],
+      },
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(additionalFile1.outputPath));
+      tt.true(existsSync(additionalFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
+test(
+  'the plugin handles non-glob additionalEntrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [additionalFile1, additionalFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: [],
+      pluginOptions: {
+        additionalEntrypoints: [additionalFile1.path, additionalFile2.path],
+      },
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(additionalFile1.outputPath));
+      tt.true(existsSync(additionalFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
+test(
+  'the plugin resolves globs provided both as entryPoints and as additionalEntrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [entryFile1, entryFile2, additionalFile1, additionalFile2] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'additional' }),
+    ]);
+
+    await build({
+      entryPoints: ['**/*.entry.ts'],
+      pluginOptions: {
+        additionalEntrypoints: ['**/*.additional.ts'],
+      },
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile1.outputPath));
+      tt.true(existsSync(entryFile2.outputPath));
+      tt.true(existsSync(additionalFile1.outputPath));
+      tt.true(existsSync(additionalFile2.outputPath));
+    });
+  }),
 );
 
 // WATCH MODE
 // ----------
 
 // -- ADD
-test.serial(
+test(
   'the plugin builds newly added files',
   runner(async (t) => {
-    const { directory } = t.context;
-    const testFile = await createEntryFile({ directory });
+    const { build, directory } = t.context;
+    await build({ entryPoints: ['**/*.entry.ts'] });
+
+    const [entryFile, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
 
     await retryAssertion(t, (tt) => {
-      tt.true(existsSync(testFile.path), 'the entry file was written');
-      tt.true(existsSync(testFile.outputPath), 'the output file was built');
+      tt.true(existsSync(entryFile.path), 'the entry file was written');
+      tt.true(existsSync(entryFile.outputPath), 'the output file was built');
+      tt.true(existsSync(ignoredFile.path), 'the ignored file was written');
+      tt.false(existsSync(ignoredFile.outputPath), 'the ignored file was not built');
+    });
+  }),
+);
+
+test(
+  'the plugin builds newly added files provided as additionalEntrypoints',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    await build({
+      entryPoints: [],
+      pluginOptions: {
+        additionalEntrypoints: ['**/*.additional.ts'],
+      },
+    });
+
+    const [additionalFile, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'additional' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(additionalFile.path), 'the additional file was written');
+      tt.true(existsSync(additionalFile.outputPath), 'the output file was built');
+      tt.true(existsSync(ignoredFile.path), 'the ignored file was written');
+      tt.false(existsSync(ignoredFile.outputPath), 'the ignored file was not built');
     });
   }),
 );
 
 // -- CHANGE
-test.serial(
+test(
   'the plugin triggers a new build when the entry file changes',
   runner(async (t) => {
-    const { directory } = t.context;
+    const { build, directory } = t.context;
+    await build();
 
     // Make test file and get the file stats
     const testFile = await createEntryFile({ directory });
@@ -68,10 +208,11 @@ test.serial(
   }),
 );
 
-test.serial(
+test(
   'the plugin triggers a new build when a dependency of an entry file changes',
   runner(async (t) => {
-    const { directory } = t.context;
+    const { build, directory } = t.context;
+    await build();
 
     // Make test file and get the file stats
     const testFile = await createEntryFile({ directory, withDependency: true });
@@ -94,10 +235,11 @@ test.serial(
   }),
 );
 
-test.serial(
+test(
   'the plugin should not crash when adding syntax errors to a file',
   runner(async (t) => {
-    const { directory } = t.context;
+    const { build, directory } = t.context;
+    await build();
 
     // Make test file and get the file stats
     const testFile = await createEntryFile({ directory });
@@ -126,11 +268,11 @@ test.serial(
 );
 
 // -- UNLINK
-
-test.serial(
+test(
   'the plugin removes the output file when a watched entry file is removed',
   runner(async (t) => {
-    const { directory } = t.context;
+    const { build, directory } = t.context;
+    await build();
 
     // Make entry file and make sure build exists
     const testFile = await createEntryFile({ directory });

@@ -2,11 +2,10 @@ import { promises as fs } from 'fs';
 import { nanoid } from 'nanoid';
 import path from 'path';
 
-import { ADDITIONAL_IN_DIR_NAME, IN_DIR_NAME, OUT_DIR_NAME } from './constants';
+import { IN_DIR_NAME, OUT_DIR_NAME } from './constants';
 import { Dependency } from './dependency';
 import { randomString } from './util';
 
-// -- ENTRY FILE
 interface EntryFileRecipe {
   name?: string;
   directory: string;
@@ -89,10 +88,4 @@ class EntryFile {
   }
 }
 
-class AdditionalEntryFile extends EntryFile {
-  public get path() {
-    return path.resolve(this.directory, ADDITIONAL_IN_DIR_NAME, `${this.name}.ts`);
-  }
-}
-
-export { AdditionalEntryFile, EntryFile };
+export { EntryFile };

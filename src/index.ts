@@ -195,4 +195,5 @@ function normalizePath(filePath: string): string {
   return path.relative(process.cwd(), filePath.replace(/^(\w+:)/, ''));
 }
 
+export type { GlobPluginControls, GlobPluginOptions };
 export { globPlugin };
