@@ -4,6 +4,7 @@ import path from 'path';
 
 import { ADDITIONAL_IN_DIR_NAME, IN_DIR_NAME, OUT_DIR_NAME } from './constants';
 import { Dependency } from './dependency';
+import { randomString } from './util';
 
 // -- ENTRY FILE
 interface EntryFileRecipe {
@@ -17,7 +18,7 @@ class EntryFile {
   public readonly dependencies: Dependency[] = [];
   public hasSyntaxError = false;
 
-  constructor({ name = nanoid(), directory }: EntryFileRecipe) {
+  constructor({ name = randomString(), directory }: EntryFileRecipe) {
     this.name = name;
     this.directory = directory;
   }
@@ -71,7 +72,7 @@ class EntryFile {
     }
 
     if (entry) {
-      fs.unlink(this.path);
+      await fs.unlink(this.path);
     }
   }
 
@@ -83,7 +84,7 @@ class EntryFile {
     }
 
     if (entry) {
-      fs.writeFile(this.path, this.contents);
+      await fs.writeFile(this.path, this.contents);
     }
   }
 }
@@ -94,4 +95,4 @@ class AdditionalEntryFile extends EntryFile {
   }
 }
 
-export { EntryFile, AdditionalEntryFile };
+export { AdditionalEntryFile, EntryFile };

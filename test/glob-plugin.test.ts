@@ -147,11 +147,3 @@ test.serial(
     );
   }),
 );
-
-// -- Type the untyped
-export interface TestContext {
-  /** Triggers a build */
-  build: () => void;
-  /** Unique directory for current test */
-  directory: string;
-}

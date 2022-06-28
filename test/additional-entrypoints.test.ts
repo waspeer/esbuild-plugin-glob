@@ -2,17 +2,16 @@ import del from 'del';
 import * as esbuild from 'esbuild';
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
-import { nanoid } from 'nanoid';
 import path from 'path';
 
 import { globPlugin } from '../src';
 import { FILE_DIR, IN_DIR_NAME, ADDITIONAL_IN_DIR_NAME, OUT_DIR_NAME } from './constants';
 import { AdditionalEntryFile } from './entryfile';
 import { test } from './runner';
-import { createEntryFile, retryAssertion } from './util';
+import { createEntryFile, randomString, retryAssertion } from './util';
 
 test('the plugin resolves a single additionalEntrypoint specified explicitly via plugin option', async (t) => {
-  const directoryName = nanoid();
+  const directoryName = randomString();
   const directory = path.resolve(FILE_DIR, directoryName);
 
   const additionalInputDirectory = path.resolve(directory, ADDITIONAL_IN_DIR_NAME);
@@ -47,7 +46,7 @@ test('the plugin resolves a single additionalEntrypoint specified explicitly via
 });
 
 test('the plugin resolves multiple additionalEntrypoints specified as a glob via plugin option', async (t) => {
-  const directoryName = nanoid();
+  const directoryName = randomString();
   const directory = path.resolve(FILE_DIR, directoryName);
 
   const additionalInputDirectory = path.resolve(directory, ADDITIONAL_IN_DIR_NAME);
@@ -89,7 +88,7 @@ test('the plugin resolves multiple additionalEntrypoints specified as a glob via
 });
 
 test('the plugin resolves a single additionalEntrypoint specified explicitly via plugin option and merges it with files resolved with esbuild entryPoints glob', async (t) => {
-  const directoryName = nanoid();
+  const directoryName = randomString();
   const directory = path.resolve(FILE_DIR, directoryName);
 
   const inputDirectory = path.resolve(directory, IN_DIR_NAME);
@@ -142,7 +141,7 @@ test('the plugin resolves a single additionalEntrypoint specified explicitly via
 });
 
 test('the plugin resolves multiple additionalEntrypoints specified as a glob via plugin option and merges them with files resolved with esbuild entryPoints glob', async (t) => {
-  const directoryName = nanoid();
+  const directoryName = randomString();
   const directory = path.resolve(FILE_DIR, directoryName);
 
   const inputDirectory = path.resolve(directory, IN_DIR_NAME);

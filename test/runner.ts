@@ -2,10 +2,8 @@ import untypedTest from 'ava';
 import del from 'del';
 import * as esbuild from 'esbuild';
 import { promises as fs } from 'fs';
-import { customAlphabet } from 'nanoid';
 import path from 'path';
 
-import type { TestContext } from './glob-plugin.test';
 import type { ExecutionContext, ImplementationFn, TestFn } from 'ava';
 
 import { globPlugin } from '../src';
@@ -16,13 +14,17 @@ import {
   IN_DIR_NAME,
   OUT_DIR_NAME,
 } from './constants';
-import { wait } from './util';
+import { randomString, wait } from './util';
 
-const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 10);
+interface TestContext {
+  /** Triggers a build */
+  build: () => void;
+  /** Unique directory for current test */
+  directory: string;
+}
 
 const test = untypedTest as TestFn<TestContext>;
 
-// -- TEST RUNNER
 function runner(
   testFunction: ImplementationFn<unknown[], TestContext>,
   {
@@ -31,7 +33,7 @@ function runner(
   }: { watchMode?: boolean; additionalEntrypoints?: string[] } = {},
 ): ImplementationFn<unknown[], TestContext> {
   return async (t: ExecutionContext<TestContext>) => {
-    const directoryName = nanoid();
+    const directoryName = randomString();
     const directory = path.resolve(FILE_DIR, directoryName);
 
     const inputDirectory = path.resolve(directory, IN_DIR_NAME);

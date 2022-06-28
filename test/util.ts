@@ -1,10 +1,15 @@
+import { customAlphabet } from 'nanoid';
+
 import type { ExecutionContext, ImplementationFn } from 'ava';
 
 import { EntryFile } from './entryfile';
 
-// -- Config for assertion retrying
+// Config for assertion retrying
 const MAX_RETRIES = 50;
 const RETRY_INTERVAL = 100;
+
+// Used to create directory and file names
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 10);
 
 // UTILITY
 // -------
@@ -33,6 +38,10 @@ async function createEntryFile({
   return entryFile;
 }
 
+/** Creates a random string [a-zA-Z]{10} */
+function randomString() {
+  return nanoid();
+}
 /** Retries the assertion every x ms for a maximum amount of times */
 async function retryAssertion(
   t: ExecutionContext,
@@ -67,8 +76,9 @@ async function retryAssertion(
   });
 }
 
+/** Waits the specified amount of ms. Defaults to 500ms. */
 async function wait(ms = 500) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export { createEntryFile, retryAssertion, wait };
+export { createEntryFile, randomString, retryAssertion, wait };

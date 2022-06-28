@@ -1,9 +1,8 @@
-import { nanoid } from 'nanoid';
 import path from 'path';
 
 import { DEPENDENCY_DIR_NAME } from './constants';
+import { randomString } from './util';
 
-// -- DEPENDENCY
 interface DependencyRecipe {
   directory: string;
   name?: string;
@@ -13,7 +12,7 @@ class Dependency {
   public readonly name: string;
   public readonly directory: string;
 
-  constructor({ directory, name = nanoid() }: DependencyRecipe) {
+  constructor({ directory, name = randomString() }: DependencyRecipe) {
     this.directory = directory;
     this.name = name;
   }
