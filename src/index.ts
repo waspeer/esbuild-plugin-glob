@@ -173,10 +173,10 @@ function globPlugin<TControls extends boolean = false>({
           });
       } else {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
-        // const resolvedEntryPoints = entryGlobs.flatMap((entryPoint) => glob.sync(entryPoint));
-        const resolvedEntryPoints = await Promise.all(
-          entryGlobs.map((entryPoint) => tinyGlob(entryPoint)),
-        ).then((nestedEntryPoints) => nestedEntryPoints.flat());
+        const resolvedEntryPoints = entryGlobs.flatMap((entryPoint) => glob.sync(entryPoint));
+        // const resolvedEntryPoints = await Promise.all(
+        //   entryGlobs.map((entryPoint) => tinyGlob(entryPoint)),
+        // ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         console.log('resolvedEntryPoints', resolvedEntryPoints);
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
