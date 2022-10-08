@@ -2,10 +2,8 @@ import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fastGlob from 'fast-glob';
 import fs from 'fs';
-import glob from 'glob';
 import match from 'minimatch';
 import path from 'path';
-import tinyGlob from 'tiny-glob';
 import invariant from 'tiny-invariant';
 import unixify from 'unixify';
 
