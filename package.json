@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.3",
+    "fast-glob": "^3.2.12",
     "glob": "^8.0.3",
     "minimatch": "^5.1.0",
     "tiny-glob": "^0.2.9",

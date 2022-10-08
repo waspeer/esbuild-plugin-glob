@@ -1,5 +1,6 @@
 import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
+import fastGlob from 'fast-glob';
 import fs from 'fs';
 import glob from 'glob';
 import match from 'minimatch';
@@ -174,7 +175,7 @@ function globPlugin<TControls extends boolean = false>({
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
         // const resolvedEntryPoints = entryGlobs.flatMap((entryPoint) => glob.sync(entryPoint));
         const resolvedEntryPoints = await Promise.all(
-          entryGlobs.map((entryPoint) => tinyGlob(entryPoint)),
+          entryGlobs.map((entryPoint) => fastGlob(entryPoint)),
         ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
