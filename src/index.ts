@@ -58,6 +58,7 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
+        console.log('entryGlobs', entryGlobs);
         const watcher = chokidar.watch(entryGlobs, chokidarOptions);
 
         context.watcher = watcher;
@@ -110,8 +111,6 @@ function globPlugin<TControls extends boolean = false>({
                 .filter((input) => !input.includes('node_modules'))
                 .map((input) => normalizePath(input)),
             );
-
-          console.log('inputs', inputs);
 
           watcher.add(inputs);
 

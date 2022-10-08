@@ -136,7 +136,7 @@ test(
 // ----------
 
 // -- ADD
-test(
+test.only(
   'the plugin builds newly added files',
   runner(async (t) => {
     const { build, directory } = t.context;
@@ -156,7 +156,7 @@ test(
   }),
 );
 
-test(
+test.only(
   'the plugin builds newly added files provided as additionalEntrypoints',
   runner(async (t) => {
     const { build, directory } = t.context;
@@ -182,7 +182,7 @@ test(
 );
 
 // -- CHANGE
-test(
+test.only(
   'the plugin triggers a new build when the entry file changes',
   runner(async (t) => {
     const { build, directory } = t.context;
@@ -208,7 +208,7 @@ test(
   }),
 );
 
-test(
+test.only(
   'the plugin triggers a new build when a dependency of an entry file changes',
   runner(async (t) => {
     const { build, directory } = t.context;
@@ -235,7 +235,7 @@ test(
   }),
 );
 
-test(
+test.only(
   'the plugin should not crash when adding syntax errors to a file',
   runner(async (t) => {
     const { build, directory } = t.context;
@@ -268,7 +268,7 @@ test(
 );
 
 // -- UNLINK
-test(
+test.only(
   'the plugin removes the output file when a watched entry file is removed',
   runner(async (t) => {
     const { build, directory } = t.context;
