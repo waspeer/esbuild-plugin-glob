@@ -7,6 +7,7 @@ import match from 'minimatch';
 import path from 'path';
 import tinyGlob from 'tiny-glob';
 import invariant from 'tiny-invariant';
+import unixify from 'unixify';
 
 interface GlobPluginOptions<TControls extends boolean> {
   chokidarOptions?: chokidar.WatchOptions;
@@ -142,7 +143,7 @@ function globPlugin<TControls extends boolean = false>({
 
             const buildResult = await esbuild.build({
               ...sharedOptions,
-              entryPoints: [addedPath],
+              entryPoints: [unixify(addedPath)],
             });
             console.log(
               entryGlobs,
