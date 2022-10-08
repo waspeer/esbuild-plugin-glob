@@ -144,6 +144,13 @@ function globPlugin<TControls extends boolean = false>({
               ...sharedOptions,
               entryPoints: [addedPath],
             });
+            console.log(
+              entryGlobs,
+              'buildResult',
+              addedPath,
+              buildResult.errors,
+              buildResult.outputFiles,
+            );
 
             handleBuildResult(addedPath, buildResult);
           })
