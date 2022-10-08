@@ -135,6 +135,7 @@ function globPlugin<TControls extends boolean = false>({
         // -----
         watcher
           .on('add', async (addedPath) => {
+            console.log(entryGlobs, 'addedPath', addedPath, matchesGlobs(addedPath));
             if (!matchesGlobs(addedPath)) return;
 
             log('[add]', addedPath);
