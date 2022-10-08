@@ -57,7 +57,6 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
-        console.log('entryGlobs', entryGlobs);
         const watcher = chokidar.watch(entryGlobs, chokidarOptions);
 
         context.watcher = watcher;
@@ -134,7 +133,6 @@ function globPlugin<TControls extends boolean = false>({
         // -----
         watcher
           .on('add', async (addedPath) => {
-            console.log(entryGlobs, 'addedPath', addedPath, matchesGlobs(addedPath));
             if (!matchesGlobs(addedPath)) return;
 
             log('[add]', addedPath);
@@ -143,13 +141,6 @@ function globPlugin<TControls extends boolean = false>({
               ...sharedOptions,
               entryPoints: [unixify(addedPath)],
             });
-            console.log(
-              entryGlobs,
-              'buildResult',
-              addedPath,
-              buildResult.errors,
-              buildResult.outputFiles,
-            );
 
             handleBuildResult(addedPath, buildResult);
           })
