@@ -289,3 +289,33 @@ test(
     );
   }),
 );
+
+// EDGE CASES
+// ----------
+
+test(
+  'the plugin should handle exclude patterns in globs',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const nested = ['nested', 'nested'];
+
+    const [entry, ignored, nestedEntry, nestedIgnored] = await Promise.all([
+      createEntryFile({ directory }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+      createEntryFile({ directory, nested }),
+      createEntryFile({ directory, nested, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: ['**/!(*.ignored).ts'],
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entry.outputPath));
+      tt.true(existsSync(nestedEntry.outputPath));
+      tt.false(existsSync(ignored.outputPath));
+      tt.false(existsSync(nestedIgnored.outputPath));
+    });
+  }),
+);

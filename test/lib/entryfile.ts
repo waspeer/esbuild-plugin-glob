@@ -7,19 +7,22 @@ import { Dependency } from './dependency';
 import { randomString } from './util';
 
 interface EntryFileRecipe {
-  name?: string;
   directory: string;
+  name?: string;
+  nested?: string | string[];
 }
 
 class EntryFile {
   public readonly directory: string;
   public readonly name: string;
+  public readonly nested?: string[];
   public readonly dependencies: Dependency[] = [];
   public hasSyntaxError = false;
 
-  constructor({ name = randomString(), directory }: EntryFileRecipe) {
-    this.name = name;
+  constructor({ directory, name = randomString(), nested }: EntryFileRecipe) {
     this.directory = directory;
+    this.name = name;
+    this.nested = nested ? (Array.isArray(nested) ? nested : [nested]) : undefined;
   }
 
   public get contents() {
@@ -46,11 +49,11 @@ class EntryFile {
   }
 
   public get path() {
-    return path.resolve(this.directory, IN_DIR_NAME, `${this.name}.ts`);
+    return path.resolve(this.directory, IN_DIR_NAME, ...(this.nested ?? []), `${this.name}.ts`);
   }
 
   public get outputPath() {
-    return path.resolve(this.directory, OUT_DIR_NAME, `${this.name}.js`);
+    return path.resolve(this.directory, OUT_DIR_NAME, ...(this.nested ?? []), `${this.name}.js`);
   }
 
   public addDependency() {
@@ -76,6 +79,10 @@ class EntryFile {
   }
 
   public async write({ dependencies = true, entry = true } = {}) {
+    if (this.nested) {
+      await fs.mkdir(path.join(this.directory, IN_DIR_NAME, ...this.nested), { recursive: true });
+    }
+
     if (dependencies) {
       await Promise.all(
         this.dependencies.map((dependency) => fs.writeFile(dependency.path, dependency.contents)),

@@ -17,17 +17,20 @@ const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 /** Convenience function to create and write an entry file */
 async function createEntryFile({
   directory,
+  nested,
   suffix,
   withDependency = false,
   withSyntaxError = false,
 }: {
   directory: string;
+  nested?: string | string[];
   suffix?: string;
   withDependency?: boolean;
   withSyntaxError?: boolean;
 }) {
   const entryFile = new EntryFile({
     directory,
+    nested,
     name: randomString() + (suffix ? `.${suffix}` : ''),
   });
 
@@ -87,4 +90,4 @@ async function wait(ms = 500) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export { createEntryFile, randomString, retryAssertion, wait };
+export { createEntryFile, createPath, randomString, retryAssertion, wait };
