@@ -1,9 +1,10 @@
 import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fs from 'fs';
+import glob from 'glob';
 import match from 'minimatch';
 import path from 'path';
-import glob from 'tiny-glob';
+import tinyGlob from 'tiny-glob';
 import invariant from 'tiny-invariant';
 
 interface GlobPluginOptions<TControls extends boolean> {
@@ -171,8 +172,9 @@ function globPlugin<TControls extends boolean = false>({
           });
       } else {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
+        // const resolvedEntryPoints = entryGlobs.flatMap((entryPoint) => glob.sync(entryPoint));
         const resolvedEntryPoints = await Promise.all(
-          entryGlobs.map((entryPoint) => glob(entryPoint)),
+          entryGlobs.map((entryPoint) => tinyGlob(entryPoint)),
         ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
