@@ -293,7 +293,7 @@ test(
 // EDGE CASES
 // ----------
 
-test(
+test.only(
   'the plugin should handle exclude patterns in globs',
   runner(async (t) => {
     const { build, directory } = t.context;

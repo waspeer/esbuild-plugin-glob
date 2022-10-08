@@ -177,6 +177,7 @@ function globPlugin<TControls extends boolean = false>({
         const resolvedEntryPoints = await Promise.all(
           entryGlobs.map((entryPoint) => tinyGlob(entryPoint)),
         ).then((nestedEntryPoints) => nestedEntryPoints.flat());
+        console.log('resolvedEntryPoints', resolvedEntryPoints);
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
     },
