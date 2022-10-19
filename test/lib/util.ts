@@ -90,4 +90,4 @@ async function wait(ms = 500) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export { createEntryFile, createPath, randomString, retryAssertion, wait };
+export { createEntryFile, randomString, retryAssertion, wait };
