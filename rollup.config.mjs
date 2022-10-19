@@ -1,7 +1,8 @@
 // @ts-check
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
-import pkg from "./package.json";
+
+import pkg from './package.json' assert { type: 'json' };
 
 /** @type {(config: import('rollup').RollupOptions) => import('rollup').RollupOptions} */
 function bundle(config) {
@@ -12,20 +13,22 @@ function bundle(config) {
       ...Object.keys(pkg.dependencies || {}),
       ...Object.keys(pkg.devDependencies || {}),
       'fs',
-      'path'
+      'path',
     ],
-  }
+  };
 }
 
 /** @type {import('rollup').RollupOptions[]} */
 const config = [
   bundle({
-    plugins: [esbuild({
-      target: ['node10'],
-    })],
+    plugins: [
+      esbuild({
+        target: ['node10'],
+      }),
+    ],
     output: [
-      { file: pkg.main, format: "cjs", sourcemap: true },
-      { file: pkg.module, format: "es", sourcemap: true },
+      { file: pkg.main, format: 'cjs', sourcemap: true },
+      { file: pkg.module, format: 'es', sourcemap: true },
     ],
   }),
   bundle({
@@ -33,9 +36,8 @@ const config = [
     output: {
       file: pkg.typings,
       format: 'es',
-    }
+    },
   }),
 ];
-
 
 export default config;
