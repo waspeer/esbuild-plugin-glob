@@ -17,6 +17,7 @@ interface TestContext {
     entryPoints?: string[];
     pluginOptions?: GlobPluginOptions<true>;
     watchMode?: boolean;
+    silent?: boolean;
   }) => Promise<void>;
   /** Unique directory for current test */
   directory: string;
@@ -48,6 +49,7 @@ function runner(
       entryPoints = ['**/*'],
       pluginOptions = {} as GlobPluginOptions<true>,
       watchMode = true,
+      silent = true,
     } = {}) {
       let plugin: esbuild.Plugin;
 
@@ -56,15 +58,21 @@ function runner(
         entryPoints,
         pluginOptions.additionalEntrypoints,
       ].map((relativeEntryPoints) =>
-        relativeEntryPoints?.map((relativeEntryPoint) =>
-          path
-            .relative(process.cwd(), path.resolve(inputDirectory, relativeEntryPoint))
-            .replace(/\\/g, '/'),
-        ),
+        relativeEntryPoints?.map((relativeEntryPoint) => {
+          const isNegative = relativeEntryPoint.startsWith('!');
+          const entryPoint = path
+            .relative(
+              process.cwd(),
+              path.resolve(inputDirectory, relativeEntryPoint.slice(isNegative ? 1 : 0)),
+            )
+            .replace(/\\/g, '/');
+
+          return isNegative ? `!${entryPoint}` : entryPoint;
+        }),
       );
 
       [plugin, pluginControls] = globPlugin({
-        silent: true,
+        silent,
         ...pluginOptions,
         additionalEntrypoints: resolvedAdditionalEntryPoints,
         controls: true,

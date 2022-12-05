@@ -132,6 +132,55 @@ test(
   }),
 );
 
+test(
+  'the plugin ignores globs provided in the ignore option',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [entryFile1, entryFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: ['**/*.entry.ts'],
+      watchMode: false,
+      pluginOptions: {
+        ignore: ['**/*.ignored.ts'],
+      },
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile1.outputPath));
+      tt.true(existsSync(entryFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
+test(
+  'the plugin ignores globs provided as a negative pattern',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    const [entryFile1, entryFile2, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await build({
+      entryPoints: ['**/*.entry.ts', '!**/*.ignored.ts'],
+      watchMode: false,
+    });
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile1.outputPath));
+      tt.true(existsSync(entryFile2.outputPath));
+      tt.false(existsSync(ignoredFile.outputPath));
+    });
+  }),
+);
+
 // WATCH MODE
 // ----------
 
@@ -175,6 +224,53 @@ test(
     await retryAssertion(t, (tt) => {
       tt.true(existsSync(additionalFile.path), 'the additional file was written');
       tt.true(existsSync(additionalFile.outputPath), 'the output file was built');
+      tt.true(existsSync(ignoredFile.path), 'the ignored file was written');
+      tt.false(existsSync(ignoredFile.outputPath), 'the ignored file was not built');
+    });
+  }),
+);
+
+test(
+  'the plugin ignores the patterns provided in the `ignore` array',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    await build({
+      entryPoints: ['**/*.ts'],
+      pluginOptions: {
+        ignore: ['**/*.ignored.ts'],
+      },
+    });
+
+    const [entryFile, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile.path), 'the entry file was written');
+      tt.true(existsSync(entryFile.outputPath), 'the output file was built');
+      tt.true(existsSync(ignoredFile.path), 'the ignored file was written');
+      tt.false(existsSync(ignoredFile.outputPath), 'the ignored file was not built');
+    });
+  }),
+);
+
+test(
+  'the plugin ignores the files matching negative patterns',
+  runner(async (t) => {
+    const { build, directory } = t.context;
+    await build({
+      entryPoints: ['*.ts', '!*.ignored.ts'],
+    });
+
+    const [entryFile, ignoredFile] = await Promise.all([
+      createEntryFile({ directory, suffix: 'entry' }),
+      createEntryFile({ directory, suffix: 'ignored' }),
+    ]);
+
+    await retryAssertion(t, (tt) => {
+      tt.true(existsSync(entryFile.path), 'the entry file was written');
+      tt.true(existsSync(entryFile.outputPath), 'the output file was built');
       tt.true(existsSync(ignoredFile.path), 'the ignored file was written');
       tt.false(existsSync(ignoredFile.outputPath), 'the ignored file was not built');
     });

@@ -37,10 +37,10 @@ globPlugin({
   chokidarOptions: {},
   // Make the function return a `controls` object, see below
   controls: false,
-  // Disables logging on file changes
-  silent: false,
   // An array of glob patterns to exclude matches
   ignore: []
+  // Disables logging on file changes
+  silent: false,
 })
 ```
 

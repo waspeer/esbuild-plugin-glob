@@ -8,18 +8,15 @@ import invariant from 'tiny-invariant';
 import unixify from 'unixify';
 
 interface GlobPluginOptions<TControls extends boolean> {
+  /** Options directly passed to chokidar when in watch mode */
   chokidarOptions?: chokidar.WatchOptions;
   /** Setting this to true returns a tuple with the plugin and a controls object */
   controls?: TControls;
   /** Disables all logging */
   silent?: boolean;
+  /** Optional additional entrypoints/glob patterns */
   additionalEntrypoints?: string[];
-  /**
-   * An array of glob patterns to exclude matches.
-   * This is an alternative way to use negative patterns.
-   *
-   * @default []
-   */
+  /** An array of glob patterns to exclude matches. This is an alternative way to use negative patterns. */
   ignore?: fastGlob.Options['ignore'];
 }
 
@@ -65,7 +62,8 @@ function globPlugin<TControls extends boolean = false>({
       // Watch mode
       if (build.initialOptions.watch) {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
-        const watcher = chokidar.watch(entryGlobs, chokidarOptions);
+        // const watcher = chokidar.watch(entryGlobs, chokidarOptions);
+        const watcher = chokidar.watch(entryGlobs, { ...chokidarOptions, ignored: ignore });
 
         context.watcher = watcher;
 
@@ -180,9 +178,7 @@ function globPlugin<TControls extends boolean = false>({
           });
       } else {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
-        const resolvedEntryPoints = await Promise.all(
-          entryGlobs.map((entryPoint) => fastGlob(entryPoint, { ignore })),
-        ).then((nestedEntryPoints) => nestedEntryPoints.flat());
+        const resolvedEntryPoints = await fastGlob(entryGlobs, { ignore });
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
     },
