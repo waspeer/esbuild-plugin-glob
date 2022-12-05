@@ -39,6 +39,8 @@ globPlugin({
   controls: false,
   // Disables logging on file changes
   silent: false,
+  // An array of glob patterns to exclude matches
+  ignore: []
 })
 ```
 

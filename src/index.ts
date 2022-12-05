@@ -14,6 +14,13 @@ interface GlobPluginOptions<TControls extends boolean> {
   /** Disables all logging */
   silent?: boolean;
   additionalEntrypoints?: string[];
+  /**
+   * An array of glob patterns to exclude matches.
+   * This is an alternative way to use negative patterns.
+   *
+   * @default []
+   */
+  ignore?: fastGlob.Options['ignore'];
 }
 
 interface GlobPluginControls {
@@ -30,6 +37,7 @@ function globPlugin<TControls extends boolean = false>({
   controls,
   silent = false,
   additionalEntrypoints = [],
+  ignore = [],
 }: GlobPluginOptions<TControls> = {}): ReturnValue<TControls> {
   const log = createLogger(silent);
 
@@ -173,7 +181,7 @@ function globPlugin<TControls extends boolean = false>({
       } else {
         const entryGlobs = [...build.initialOptions.entryPoints, ...additionalEntrypoints];
         const resolvedEntryPoints = await Promise.all(
-          entryGlobs.map((entryPoint) => fastGlob(entryPoint)),
+          entryGlobs.map((entryPoint) => fastGlob(entryPoint, { ignore })),
         ).then((nestedEntryPoints) => nestedEntryPoints.flat());
         build.initialOptions.entryPoints = resolvedEntryPoints;
       }
