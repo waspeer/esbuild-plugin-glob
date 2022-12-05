@@ -1,6 +1,6 @@
 {
   "name": "esbuild-plugin-glob",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "description": "glob entry points in esbuild",
   "keywords": [
     "esbuild",
