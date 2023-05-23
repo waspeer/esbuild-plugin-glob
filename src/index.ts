@@ -2,7 +2,7 @@ import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fastGlob from 'fast-glob';
 import fs from 'fs';
-import match from 'minimatch';
+import { match } from 'minimatch';
 import path from 'path';
 import invariant from 'tiny-invariant';
 import unixify from 'unixify';
@@ -96,7 +96,7 @@ function globPlugin<TControls extends boolean = false>({
         // -----------------
         // Test if the provided path matches the entry globs
         const matchesGlobs = (filePath: string): boolean => {
-          return entryGlobs.some((glob) => match(filePath, glob));
+          return entryGlobs.some((glob) => match([filePath], glob));
         };
 
         // Parse the build result and update watcher and maps
