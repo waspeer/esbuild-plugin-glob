@@ -7,9 +7,11 @@
 
 This plugin allows the usage of [glob patterns](https://en.wikipedia.org/wiki/Glob_%28programming%29) as entry points for [esbuild](https://esbuild.github.io/). It supports single builds as well as watch mode.
 
-## ⚠️ Warning ⚠️
+## ⚠️ Deprecated ⚠️
 
-This plugin is not yet compatible with esbuild v0.17.0 and up. It's a bit tricky to get it working with the new `context` api (`watch` mode in particular). If you want to help out, please open an issue or a PR.
+[Esbuild now natively supports glob-style entrypoints since v0.19.0](https://github.com/evanw/esbuild/releases/tag/v0.19.0). This plugin is no longer needed.
+
+Also note that this plugin is not yet compatible with esbuild v0.17.0 and up. It's a bit tricky to get it working with the new `context` api (`watch` mode in particular). If you'd like this functionality, please open an issue or a PR.
 
 ## Installation
 
